@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload and Translate</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #000;
+            animation: spin 1s linear infinite;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px; /* Add some spacing */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload and Translate PowerPoint</h1>
+    <h3>Zachry Rankin</h3>
+    <h3>Note: This is currently in development. No information from uploaded documents is preserved.</h3>
+    <h4>Instructions:</h4>
+    <h5>&emsp;1. Use the "Choose File" version to upload an english .pptx file</h5>
+    <h5>&emsp;2. Use the "Upload and Translate" button to translate your .pptx file (Generates a new file).</h5>
+    <h6><i>&emsp;Note: The translation process takes a while and the download will automatically begin once completed.</i></h6>
+     <form action="/translate" method="POST" enctype="multipart/form-data" id="upload-form">
+        <div style="display: flex; align-items: center;">
+            <input type="file" name="file" id="file-input">
+            <input type="submit" value="Upload and Translate" id="submit-button">
+            <div id="loading-spinner" class="hidden">
+                <div class="spinner"></div>
+            </div>
+            <div id="checkmark-icon" class="hidden" style="margin-left: 15px">
+                &#x2713;
+            </div>
+<!--            <div id="xmark-icon" class="hidden" style="margin-left: 15px">-->
+<!--                &#x274C;-->
+<!--            </div>-->
+        </div>
+    </form>
+    <div style="text-align: center;">
+        <img src="https://clipart-library.com/images/di9Xgkp5T.jpg" alt="Apple Image" width="600" height="600">
+    </div>
+    <script>
+        const form = document.getElementById("upload-form");
+        const fileInput = document.getElementById("file-input");
+        const submitButton = document.getElementById("submit-button");
+        const loadingSpinner = document.getElementById("loading-spinner");
+        const checkmarkIcon = document.getElementById("checkmark-icon");
+        // const xmarkicon = document.getElementById("xmark-icon");
+        let translationCount = 0;
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            submitButton.disabled = true;
+            loadingSpinner.classList.remove("hidden");
+            // xmarkicon.classList.add("hidden");
+            checkmarkIcon.classList.add("hidden");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const response = await fetch("/translate", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    loadingSpinner.classList.add("hidden");
+                    checkmarkIcon.classList.remove("hidden");
+                    translationCount++;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                // xmarkicon.classList.remove("hidden");
+            } finally {
+                submitButton.disabled = false;
+                loadingSpinner.classList.add("hidden");
+
+            }
+        });
+
+        // Reset the checkmark on a new translation attempt
+        fileInput.addEventListener("change", () => {
+            if (translationCount > 0) {
+                // xmarkicon.classList.add("hidden");
+                checkmarkIcon.classList.add("hidden");
+                translationCount = 0; // Reset the counter
+            }
+        });
+    </script>
+</body>
+</html>

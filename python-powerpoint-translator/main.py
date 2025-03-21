@@ -10,12 +10,12 @@ app = Flask(__name__)
 def index():
     return render_template('upload_form.html')
 
-def translate_to_spanish(text):
+def translate_text(text, target_lang):
     translator = Translator()
-    translated = translator.translate(text, src='en', dest='es')
+    translated = translator.translate(text, src='en', dest=target_lang)
     return translated.text
 
-def translate_presentation(input_path, output_path):
+def translate_presentation(input_path, output_path, target_lang, font_adjustment='auto'):
     prs = Presentation(input_path)
     i = False
 
@@ -29,7 +29,28 @@ def translate_presentation(input_path, output_path):
                             i = True
                             break
                     if i:
-                        translated_text = translate_to_spanish(original_text)
+                        translated_text = translate_text(original_text, target_lang)
+                        
+                        # Handle font size adjustment based on user preference
+                        if font_adjustment == 'auto' and hasattr(shape, "text_frame"):
+                            length_ratio = len(translated_text) / len(original_text)
+                            if length_ratio > 1.2:  # Text is longer
+                                for paragraph in shape.text_frame.paragraphs:
+                                    for run in paragraph.runs:
+                                        if hasattr(run, "font"):
+                                            current_size = run.font.size
+                                            if current_size:
+                                                new_size = int(current_size / length_ratio)
+                                                run.font.size = new_size
+                            elif length_ratio < 0.8:  # Text is shorter
+                                for paragraph in shape.text_frame.paragraphs:
+                                    for run in paragraph.runs:
+                                        if hasattr(run, "font"):
+                                            current_size = run.font.size
+                                            if current_size:
+                                                new_size = int(current_size / length_ratio)
+                                                run.font.size = new_size
+                        
                         shape.text = translated_text
                         i = False
 
@@ -39,19 +60,20 @@ def translate_presentation(input_path, output_path):
 @app.route('/translate', methods=['POST'])
 def translate_pptx_and_return():
     uploaded_file = request.files['file']
+    target_lang = request.form.get('target_language', 'es')  # Default to Spanish if not specified
+    font_adjustment = request.form.get('font_adjustment', 'auto')  # Default to automatic if not specified
 
     if uploaded_file.filename != '':
-        # Create a temporary directory to save the uploaded file
         temp_dir = tempfile.mkdtemp()
         uploaded_path = os.path.join(temp_dir, uploaded_file.filename)
         uploaded_file.save(uploaded_path)
 
         ppt_name = os.path.splitext(uploaded_file.filename)[0]
-        output_path = os.path.join(temp_dir, f"{ppt_name}-translated(es).pptx")
+        output_path = os.path.join(temp_dir, f"{ppt_name}-translated({target_lang}).pptx")
 
-        translate_presentation(uploaded_path, output_path)
+        translate_presentation(uploaded_path, output_path, target_lang, font_adjustment)
 
-        return send_file(output_path, as_attachment=True, download_name=f"{ppt_name}-translated(es).pptx")
+        return send_file(output_path, as_attachment=True, download_name=f"{ppt_name}-translated({target_lang}).pptx")
 
     return "No file uploaded"
 

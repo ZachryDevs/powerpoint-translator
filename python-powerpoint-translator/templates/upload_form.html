@@ -1,103 +1,468 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload and Translate</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        .hidden {
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .header p {
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .options-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .option-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .select-input:hover {
+            border-color: var(--primary-color);
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #f8fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
             display: none;
         }
+
+        .upload-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .upload-button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #000;
-            animation: spin 1s linear infinite;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top-color: var(--primary-color);
             border-radius: 50%;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 10px; /* Add some spacing */
+            animation: spin 1s linear infinite;
+        }
+
+        .status-icon {
+            font-size: 1.5rem;
+        }
+
+        .status-icon.success {
+            color: var(--success-color);
+        }
+
+        .status-icon.error {
+            color: var(--error-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 1rem;
+            text-align: center;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background-color: #f1f5f9;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .instructions h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .instructions ul {
+            list-style-position: inside;
+            margin-left: 1rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 1rem auto;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .upload-container {
+                padding: 1rem;
+            }
+
+            .options-container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Upload and Translate PowerPoint</h1>
-    <h3>Zachry Rankin</h3>
-    <h3>Note: This is currently in development. No information from uploaded documents is preserved.</h3>
-    <h4>Instructions:</h4>
-    <h5>&emsp;1. Use the "Choose File" version to upload an english .pptx file</h5>
-    <h5>&emsp;2. Use the "Upload and Translate" button to translate your .pptx file (Generates a new file).</h5>
-    <h6><i>&emsp;Note: The translation process takes a while and the download will automatically begin once completed.</i></h6>
-     <form action="/translate" method="POST" enctype="multipart/form-data" id="upload-form">
-        <div style="display: flex; align-items: center;">
-            <input type="file" name="file" id="file-input">
-            <input type="submit" value="Upload and Translate" id="submit-button">
-            <div id="loading-spinner" class="hidden">
-                <div class="spinner"></div>
-            </div>
-            <div id="checkmark-icon" class="hidden" style="margin-left: 15px">
-                &#x2713;
-            </div>
-<!--            <div id="xmark-icon" class="hidden" style="margin-left: 15px">-->
-<!--                &#x274C;-->
-<!--            </div>-->
+    <div class="container">
+        <div class="header">
+            <h1>PowerPoint Translator</h1>
+            <p>Translate your PowerPoint presentations to the 9 most popular languages from English</p>
         </div>
-    </form>
-    <div style="text-align: center;">
-        <img src="https://clipart-library.com/images/di9Xgkp5T.jpg" alt="Apple Image" width="600" height="600">
+
+        <div class="upload-container">
+            <div class="options-container">
+                <div class="option-group">
+                    <label for="targetLanguage">Target Language</label>
+                    <select id="targetLanguage" class="select-input">
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                        <option value="zh-cn">Chinese (Simplified)</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label for="fontAdjustment">Font Size Adjustment</label>
+                    <select id="fontAdjustment" class="select-input">
+                        <option value="auto">Automatic</option>
+                        <option value="fixed">Fixed Size</option>
+                        <option value="none">No Adjustment</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">📄</div>
+                <h2>Drag & Drop your PowerPoint file here</h2>
+                <p>or</p>
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".pptx">
+                <button class="upload-button" id="browseButton">Browse Files</button>
+                <p style="margin-top: 1rem; color: #64748b;">Supported format: .pptx</p>
+            </div>
+
+            <div class="status-container">
+                <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+                <div id="statusIcon" class="status-icon" style="display: none;"></div>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Processing: 0%</div>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+
+        <div class="instructions">
+            <h2>How it works</h2>
+            <ul>
+                <li>Select your target language and font adjustment preferences</li>
+                <li>Upload your PowerPoint file (.pptx format)</li>
+                <li>Wait for the translation to complete</li>
+                <li>Your translated file will automatically download</li>
+            </ul>
+        </div>
     </div>
+
     <script>
-        const form = document.getElementById("upload-form");
-        const fileInput = document.getElementById("file-input");
-        const submitButton = document.getElementById("submit-button");
-        const loadingSpinner = document.getElementById("loading-spinner");
-        const checkmarkIcon = document.getElementById("checkmark-icon");
-        // const xmarkicon = document.getElementById("xmark-icon");
-        let translationCount = 0;
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseButton = document.getElementById('browseButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const statusIcon = document.getElementById('statusIcon');
+        const errorMessage = document.getElementById('errorMessage');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const targetLanguage = document.getElementById('targetLanguage');
+        const fontAdjustment = document.getElementById('fontAdjustment');
 
-        form.addEventListener("submit", async (e) => {
+        // Handle file selection via button
+        browseButton.addEventListener('click', () => fileInput.click());
+
+        // Handle file selection via input
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            submitButton.disabled = true;
-            loadingSpinner.classList.remove("hidden");
-            // xmarkicon.classList.add("hidden");
-            checkmarkIcon.classList.add("hidden");
+            dropZone.classList.add('dragover');
+        });
 
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
 
-            try {
-                const response = await fetch("/translate", {
-                    method: "POST",
-                    body: formData
-                });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
 
-                if (response.ok) {
-                    loadingSpinner.classList.add("hidden");
-                    checkmarkIcon.classList.remove("hidden");
-                    translationCount++;
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                if (!file.name.endsWith('.pptx')) {
+                    showError('Please upload a PowerPoint file (.pptx)');
+                    return;
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                // xmarkicon.classList.remove("hidden");
-            } finally {
-                submitButton.disabled = false;
-                loadingSpinner.classList.add("hidden");
-
+                uploadFile(file);
             }
-        });
+        }
 
-        // Reset the checkmark on a new translation attempt
-        fileInput.addEventListener("change", () => {
-            if (translationCount > 0) {
-                // xmarkicon.classList.add("hidden");
-                checkmarkIcon.classList.add("hidden");
-                translationCount = 0; // Reset the counter
-            }
-        });
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('target_language', targetLanguage.value);
+            formData.append('font_adjustment', fontAdjustment.value);
+
+            // Reset UI
+            loadingSpinner.style.display = 'block';
+            statusIcon.style.display = 'none';
+            errorMessage.style.display = 'none';
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Processing: 0%';
+            browseButton.disabled = true;
+
+            // Simulate progress updates (since we don't have real-time progress from the server)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress <= 90) {
+                    progressFill.style.width = `${progress}%`;
+                    progressText.textContent = `Processing: ${progress}%`;
+                }
+            }, 500);
+
+            fetch('/translate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Translation failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Complete!';
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const langCode = targetLanguage.value;
+                const langName = targetLanguage.options[targetLanguage.selectedIndex].text;
+                a.download = file.name.replace('.pptx', `-translated(${langName}).pptx`);
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Show success
+                showSuccess();
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                showError('An error occurred during translation. Please try again.');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                loadingSpinner.style.display = 'none';
+                browseButton.disabled = false;
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        function showSuccess() {
+            statusIcon.textContent = '✓';
+            statusIcon.className = 'status-icon success';
+            statusIcon.style.display = 'block';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            statusIcon.textContent = '✕';
+            statusIcon.className = 'status-icon error';
+            statusIcon.style.display = 'block';
+        }
     </script>
 </body>
 </html>
